@@ -1,0 +1,10 @@
+{ 
+    "store": "SUKISHI",
+    "result_path": "/mnt/vdofilesystem/count_people_engine",
+    "outer_polygon": ["(813, 3)", "(1911, 7)", "(1914, 585)", "(803, 676)"], 
+    "inner_polygon": ["(802,689)", "(1920, 600)", "(1920, 1080)", "(788,1077)"],
+    "point_detect_list": ["Nose", "LShoulder", "RShoulder"],
+    "target_score": 2
+  }
+
+
