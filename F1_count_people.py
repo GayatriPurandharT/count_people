@@ -5,8 +5,11 @@ import numpy as np
 import pandas as pd
 from pandas import ExcelWriter
 from pandas import ExcelFile
+import openpyxl
 from openpyxl import workbook 
 from openpyxl import load_workbook
+import argparse
+import os
 
 
 def get_confusionmatrix(true_positives,false_positives, false_negatives):
@@ -23,19 +26,25 @@ def get_confusionmatrix(true_positives,false_positives, false_negatives):
 def save_in_excel(wb, mp_name, mp_vdos, gt_person_walkin, mp_person_walkin, precision_walkin, recall_walkin, F1_walkin):
     sheets = wb.sheetnames
     sheet1 = wb[sheets[0]]
+    sheet1.cell(row = 1, column = 1).value = 'vdo_name'
     sheet1.cell(row = row, column = 1).value = mp_vdos
-    sheet1.cell(row = row, column = 3).value = gt_person_walkin
-    sheet1.cell(row = row, column = 4).value = mp_person_walkin
-    sheet1.cell(row = row, column = 5).value = precision_walkin
-    sheet1.cell(row = row, column = 6).value = recall_walkin 
-    sheet1.cell(row = row, column = 7).value = F1_walkin
-    wb.save("F1_"+ mp_name +".xlsx")  
+    sheet1.cell(row = 1, column = 2).value = 'gt_person_walkin'
+    sheet1.cell(row = row, column = 2).value = gt_person_walkin
+    sheet1.cell(row = 1, column = 3).value = 'mp_person_walkin'
+    sheet1.cell(row = row, column = 3).value = mp_person_walkin
+    sheet1.cell(row = 1, column = 4).value = 'precision_walkin'
+    sheet1.cell(row = row, column =4).value = precision_walkin
+    sheet1.cell(row = 1, column = 5).value = 'recall_walkin'
+    sheet1.cell(row = row, column = 5).value = recall_walkin 
+    sheet1.cell(row = 1, column = 6).value = 'F1_walkin'
+    sheet1.cell(row = row, column = 6).value = F1_walkin
+    wb.save("F1_output/F1_"+ mp_name)  
 
 
 #read all columns from groundtruth and machine prediction sheets
-def validate_sheet(mp_data, gt_data, row, mp_sheet, mp_path):
+def validate_sheet(mp_data, gt_data, row, mp_sheet, mp_name):
     
-    mp_name = os.path.basename(mp_path)
+    # mp_name = os.path.basename(mp_path)
     
     #metrics for validation
     true_positives = 0
@@ -82,16 +91,21 @@ def validate_sheet(mp_data, gt_data, row, mp_sheet, mp_path):
         
         #######write result to excel sheet#############
         
-        if not os.path.isfile("F1_"+ mp_name +".xlsx"):
+        if not os.path.isfile("F1_output/F1_"+ mp_name):
             wb = openpyxl.Workbook()
             save_in_excel(wb, mp_name, str(mp_vdos), int(gt_person_walkin[0]), mp_person_walkin[0], precision_walkin, recall_walkin, F1_walkin)
         else:
-            wb = load_workbook("F1_"+ mp_name +".xlsx")
+            wb = load_workbook("F1_output/F1_"+ mp_name)
             save_in_excel(wb, mp_name, str(mp_vdos), int(gt_person_walkin[0]), mp_person_walkin[0], precision_walkin, recall_walkin, F1_walkin)
     else:  
-        
-        wb = load_workbook("F1_"+ mp_name +".xlsx")
-        save_in_excel(wb, mp_name, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A')
+
+        if not os.path.isfile("F1_output/F1_"+ mp_name):
+            wb = openpyxl.Workbook()
+            save_in_excel(wb, mp_name, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A')
+        else:
+            wb = load_workbook("F1_output/F1_"+ mp_name)
+            save_in_excel(wb, mp_name, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A')
+
 
 if __name__ == "__main__":
     
@@ -105,12 +119,12 @@ if __name__ == "__main__":
     
     row = 2
     gt_sheets = pd.ExcelFile(gt_path)
-    mp_sheets = pd.ExcelFile(mp_path)
+    mp_sheets = pd.ExcelFile('mp_output/'+mp_path)
     
     for mp_sheet in mp_sheets.sheet_names:
-        mp_data = pd.read_excel(gt_path, sheet_name=mp_sheet)
+        mp_data = pd.read_excel('mp_output/'+mp_path, sheet_name=mp_sheet)
         if mp_sheet in gt_sheets.sheet_names:
-            gt_data = pd.read_excel(mp_path, sheet_name=mp_sheet)
+            gt_data = pd.read_excel(gt_path, sheet_name=mp_sheet)
             validate_sheet(mp_data, gt_data, row, mp_sheet, mp_path)
             row+=1
         else:
