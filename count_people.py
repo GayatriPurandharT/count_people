@@ -116,14 +116,13 @@ def zone_detection(skeleton_keypoint, detect_polygon, parts_dict, config_path):
 # In[15]:
 
 
-def count_detect(config_path,img_dir,json_file,video_name,mp_path):
-    config_name = os.path.basename(config_path)
+def count_detect(config_path,img_dir,json_file,video_path,mp_path):
+    config_name = os.path.basename(config_path).split('.')[0]
+    video_name = os.path.basename(video_path)
     with open(config_path, encoding='utf-8') as FConfig:
         config = json.loads(FConfig.read())
     
     store = config["store"]
-    
-    video = video_name
     json_f = json_file
     image = img_dir
     
@@ -239,18 +238,18 @@ def count_detect(config_path,img_dir,json_file,video_name,mp_path):
         
     for current in tqdm(idx_inout):
         if(idx_inout[current]['idx_check'] == 1 and idx_inout[current]['frame_check'] == 1): 
-            print("walk_in")
-            print(idx_inout[current]['frame_id'], idx_inout[current]['idx'])
+            # print("walk_in")
+            # print(idx_inout[current]['frame_id'], idx_inout[current]['idx'])
             count_in += 1
             inout_writer = inout_writer.append({'idx': idx_inout[current]['idx'], 'frame_no':idx_inout[current]['frame_id'], 'date': '00:00:00', 'timestamp': '00:00:00', 'in/out/pass': 'in'}, ignore_index=True)
             frame_int = int(idx_inout[current]['frame_id'][3:9])
-            report_result = report_result.append({'vdo_name': video, 'frame': frame_int, 'idx': idx_inout[current]['idx']}, ignore_index=True)
+            report_result = report_result.append({'vdo_name': video_name, 'frame': frame_int, 'idx': idx_inout[current]['idx']}, ignore_index=True)
         if(idx_inout[current]['idx_check'] == -1 and idx_inout[current]['frame_check'] == -1): 
-            print("walk_out")
-            print(idx_inout[current]['frame_id'], idx_inout[current]['idx'])
+            # print("walk_out")
+            # print(idx_inout[current]['frame_id'], idx_inout[current]['idx'])
             count_out += 1 
             inout_writer = inout_writer.append({'idx': idx_inout[current]['idx'], 'frame_no':idx_inout[current]['frame_id'], 'date': '00:00:00', 'timestamp': '00:00:00', 'in/out/pass': 'out'}, ignore_index=True)
-#             report_result = report_result.append({'Video file name':video, 'Frame name':idx_inout[current]['frame_id'], 'idx':idx_inout[current]['idx']}, ignore_index=True)          
+#             report_result = report_result.append({'Video file name'video_name, 'Frame name':idx_inout[current]['frame_id'], 'idx':idx_inout[current]['idx']}, ignore_index=True)          
 
 
     ### write excel ###
@@ -264,18 +263,18 @@ def count_detect(config_path,img_dir,json_file,video_name,mp_path):
     inout_info = inout_info.append({'Info': 'Output Type', 'Detail': 'CustomerVisiting'}, ignore_index=True)
     
        
-    if not os.path.isfile(mp_path +'\\'+'sukishi_mp_sheets_'+config_name+'.xlsx'):
-        writer_report = pd.ExcelWriter(mp_path +'\\'+'sukishi_mp_sheets_'+config_name+'.xlsx', engine = 'xlsxwriter')
+    if not os.path.isfile(mp_path+'sukishi_mp_sheets_'+config_name+'.xlsx'):
+        writer_report = pd.ExcelWriter(mp_path+'sukishi_mp_sheets_'+config_name+'.xlsx', engine = 'xlsxwriter')
         report_result['person_walkin'] = count_in
-        sh_name = video.split('.')[0]
+        sh_name = video_name
         report_result.to_excel(writer_report, sheet_name= sh_name, index=False)
         writer_report.save()  
     else:
-        workbook = load_workbook(mp_path +'\\'+'sukishi_mp_sheets_'+config_name+'.xlsx')
-        writer_report = pd.ExcelWriter(mp_path +'\\'+'sukishi_mp_sheets_'+config_name+'.xlsx', engine = 'openpyxl')
+        workbook = load_workbook(mp_path+'sukishi_mp_sheets_'+config_name+'.xlsx')
+        writer_report = pd.ExcelWriter(mp_path+'sukishi_mp_sheets_'+config_name+'.xlsx', engine = 'openpyxl')
         writer_report.book = workbook
         report_result['person_walkin'] = count_in
-        sh_name = video.split('.')[0]
+        sh_name = video_name
         report_result.to_excel(writer_report, sheet_name= sh_name, index=False)
         writer_report.save()  
 
@@ -288,20 +287,21 @@ def count_detect(config_path,img_dir,json_file,video_name,mp_path):
 if __name__ == "__main__":
     start = time.time()
     ap = argparse.ArgumentParser()
-    ap.add_argument("--config_path", required=True, help="path of json file")
-    ap.add_argument("--input", required=True , help="path of existing counting file")
+    ap.add_argument("--config_path", required=True, help='config_path')
+    ap.add_argument("--input", required=True, help='input')
+    ap.add_argument("--mp", required=True, help='mp_path')
  
     args = vars(ap.parse_args())
     config_path = args['config_path']
-    mp_path = args['mp_path']
-    
     input_file = args['input']
+    mp_path = args['mp']
+
     
     img_dir = input_file+"_img"
     json_file = input_file+".json"
-    video_name = input_file
+    video_path = input_file
     
-    print(count_detect(config_path,img_dir,json_file,video_name,mp_path))
+    print(count_detect(config_path,img_dir,json_file,video_path,mp_path))
     end = time.time()
     print(end - start)
 
